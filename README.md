@@ -10,7 +10,7 @@ A lightweight wrapper for converting python functions into plugins for use in th
 *See the [example](example) for a complete implementation of this library for creating a demo plugin.* 
 
 1. Define a main function with the following signature:
-PLUGIN_PARAMS
+
 ```python
 # my_module.py
 def main(params: dict) -> dict:
