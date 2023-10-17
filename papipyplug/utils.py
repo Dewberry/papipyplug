@@ -4,32 +4,50 @@ import logging
 
 
 def parse_input(sysargs: list, plugin_params: dict) -> dict:
-    # # Verify plugin_params are provided
-    # if "required" or "optional" not in plugin_params.keys():
-    #     logging.error(f"must include input params dictionary with keys `required` and `optional`")
-    #     sys.exit(1)
+    if (not isinstance(plugin_params, dict)) or (set(plugin_params.keys()) != {"required", "optional"}):
+        logging.error(
+            f"Plugin improperly configured. Params definition must be a dict with exact keys `required` and `optional`. Provided: {plugin_params}"
+        )
+        sys.exit(1)
 
     # Verify user input parameters are consistent with plugin_params
     if len(sysargs) != 2:
-        logging.error(f"must include input params dictionary with keys `required` and `optional`")
+        logging.error(f"{len(sysargs)} sys args provided (expected 2, e.g. 1 CLI arg)")
         sys.exit(1)
 
     # Read parameters in to dict to verify and pass to the plugin for execution
     try:
         params = json.loads(sysargs[1])
     except Exception as e:
-        logging.error(str(e))
+        logging.error(f"Failed to parse arg as JSON. Error: {str(e)}")
+        sys.exit(1)
+    if not isinstance(params, dict):
+        logging.error(f"Input JSON must be a dict. Provided: {params}")
         sys.exit(1)
 
     # Verify parameters
-    missing_inputs = []
+    input_errs = []
 
+    # Check for missing inputs
+    missing_inputs = []
     for p in plugin_params["required"]:
         if p not in params.keys():
             missing_inputs.append(p)
-
     if len(missing_inputs) > 0:
-        logging.error(f"Verify all inputs are correct. Required: {plugin_params}, Provided: {params}")
+        input_errs.append(f"Missing required inputs: {missing_inputs}")
+
+    # Check for unexpected inputs
+    unexpected_inputs = set(params.keys()) - set(plugin_params["required"] + plugin_params["optional"])
+    if unexpected_inputs:
+        input_errs.append(f"Unexpected inputs: {sorted(unexpected_inputs)}")
+
+    # Exit if any errors were found
+    if input_errs:
+        for msg in input_errs:
+            logging.error(msg)
+        logging.error(
+            f"Input error(s) encountered. Required: {plugin_params['required']}. Optional: {plugin_params['optional']}. Provided: {params}"
+        )
         sys.exit(1)
 
     logging.info("successfully verified input parameters")
