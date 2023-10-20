@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from datetime import datetime
 
 version_timestamp = datetime.now().strftime("%Y.%m")
-version_patch = 2
+version_patch = 3
 version = f"{version_timestamp}.{version_patch}"
 
 
